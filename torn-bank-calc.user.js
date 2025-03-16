@@ -125,43 +125,127 @@
     }
 
     function createCalculatorUI() {
-        let container = document.querySelector('#mainContainer .content-wrapper, .content-wrapper, #bankBlock, .content, body');
-        if (!container || document.getElementById('torn-bank-calc')) return;
-        const div = document.createElement('div');
-        div.id = 'torn-bank-calc';
-        div.style.cssText = 'margin-top:20px;font-family:Arial,sans-serif;font-size:14px;max-width:400px;overflow-x:hidden';
+        console.log('Torn Bank Calc: Attempting to create UI...');
+
+        let targetContainer = document.querySelector('#mainContainer .content-wrapper') ||
+                             document.querySelector('.content-wrapper') ||
+                             document.querySelector('#bankBlock') ||
+                             document.querySelector('.content') ||
+                             document.body;
+
+        if (!targetContainer) {
+            console.error('Torn Bank Calc: Could not find target container. Aborting UI creation.');
+            return;
+        }
+
+        if (document.getElementById('torn-bank-calc')) {
+            console.log('Torn Bank Calc: UI already exists, skipping creation.');
+            return;
+        }
+
+        const calcDiv = document.createElement('div');
+        calcDiv.id = 'torn-bank-calc';
+        calcDiv.style.marginTop = '20px';
+        calcDiv.style.fontFamily = 'Arial, sans-serif';
+        calcDiv.style.fontSize = '14px';
+        calcDiv.style.maxWidth = '400px';
+        calcDiv.style.overflowX = 'hidden';
+
+        // Load saved preferences
         const savedMerits = localStorage.getItem('tornBankCalcMerits') || '0';
-        const savedStock = localStorage.getItem('tornBankCalcStockBonus') === 'true';
-        const meritOptions = Array.from({length: 11}, (_, i) => `<option value="${i}" ${i == savedMerits ? 'selected' : ''}>${i} Merits (+${i*5}%)</option>`).join('');
-        div.innerHTML = `
-            <details id="calcDetails" style="margin-bottom:10px;border:1px solid #2a3439;border-radius:5px;">
-                <summary style="cursor:pointer;padding:10px;background:#28a745;border-radius:3px;color:#fff;text-align:center;font-weight:bold">Investment Calculator</summary>
-                <div style="padding:15px;background:#1c2526;border-radius:0 0 3px 3px">
-                    <label style="display:block;margin-bottom:5px;color:#d0d0d0">Principal ($):</label>
-                    <input type="text" id="principal" placeholder="Enter amount (e.g., 2000m)" style="width:100%;padding:5px;background:#2a3439;color:#fff;border:1px solid #3e4a50;border-radius:3px;margin-bottom:10px">
-                    <label style="display:block;margin-bottom:5px;color:#d0d0d0">Target Amount ($):</label>
-                    <input type="text" id="targetAmount" placeholder="Enter target (e.g., 3000m)" style="width:100%;padding:5px;background:#2a3439;color:#fff;border:1px solid #3e4a50;border-radius:3px;margin-bottom:10px">
-                    <label style="display:block;margin-bottom:5px;color:#d0d0d0">Bank Merits:</label>
-                    <select id="meritSelect" style="width:100%;padding:5px;background:#2a3439;color:#fff;border:1px solid #3e4a50;border-radius:3px;margin-bottom:10px">${meritOptions}</select>
-                    <label style="display:block;margin-bottom:10px;color:#d0d0d0"><input type="checkbox" id="stockBonus" style="vertical-align:middle;margin-right:5px" ${savedStock ? 'checked' : ''}> Own TCB Stock (+10%)</label>
-                    <button id="calculateBtn" style="width:100%;padding:8px;background:#28a745;color:#fff;border:none;border-radius:3px;cursor:pointer">Calculate</button>
-                    <div id="result" style="margin-top:15px"><label style="display:block;margin-top:10px;color:#fff">Shortest Path to Target:</label><table id="comparisonTable" style="width:100%;max-width:400px;border-collapse:collapse;margin-top:10px;table-layout:fixed"><thead><tr style="background:#2a3439"><th style="padding:5px;border:1px solid #3e4a50;color:#fff;width:25%">Period</th><th style="padding:5px;border:1px solid #3e4a50;color:#fff;width:25%">Method</th><th style="padding:5px;border:1px solid #3e4a50;color:#fff;width:25%">Time to Target</th><th style="padding:5px;border:1px solid #3e4a50;color:#fff;width:25%">Profit</th></tr></thead><tbody id="comparisonTableBody"><tr><td colspan="4" style="text-align:center;padding:5px;color:#fff">Enter values and calculate to compare</td></tr></tbody></table></div>
+        const savedStockBonus = localStorage.getItem('tornBankCalcStockBonus') === 'true';
+
+        const meritOptionsHTML = Array.from({ length: 11 }, (_, i) => 
+            `<option value="${i}" ${i === parseInt(savedMerits) ? 'selected' : ''}>${i} Merits (+${i * 5}%)</option>`
+        ).join('');
+
+        calcDiv.innerHTML = `
+            <details id="calcDetails" style="margin-bottom: 10px; border: 1px solid #2a3439; border-radius: 5px;">
+                <summary style="cursor: pointer; padding: 10px; background: #28a745; border-radius: 3px; color: #fff; text-align: center; font-weight: bold;">Investment Calculator</summary>
+                <div style="padding: 15px; background: #1c2526; border-radius: 0 0 3px 3px;">
+                    <label style="display: block; margin-bottom: 5px; color: #d0d0d0;">Principal ($):</label>
+                    <input type="text" id="principal" placeholder="Enter amount (e.g., 2000m)" style="width: 100%; padding: 5px; background: #2a3439; color: #fff; border: 1px solid #3e4a50; border-radius: 3px; margin-bottom: 10px;">
+                    
+                    <label style="display: block; margin-bottom: 5px; color: #d0d0d0;">Target Amount ($):</label>
+                    <input type="text" id="targetAmount" placeholder="Enter target (e.g., 3000m)" style="width: 100%; padding: 5px; background: #2a3439; color: #fff; border: 1px solid #3e4a50; border-radius: 3px; margin-bottom: 10px;">
+                    
+                    <label style="display: block; margin-bottom: 5px; color: #d0d0d0;">Bank Merits:</label>
+                    <select id="meritSelect" style="width: 100%; padding: 5px; background: #2a3439; color: #fff; border: 1px solid #3e4a50; border-radius: 3px; margin-bottom: 10px;">
+                        ${meritOptionsHTML}
+                    </select>
+                    
+                    <label style="display: block; margin-bottom: 10px; color: #d0d0d0;">
+                        <input type="checkbox" id="stockBonus" style="vertical-align: middle; margin-right: 5px;" ${savedStockBonus ? 'checked' : ''}> Own TCB Stock (+10%)
+                    </label>
+                    
+                    <button id="calculateBtn" style="width: 100%; padding: 8px; background: #28a745; color: #fff; border: none; border-radius: 3px; cursor: pointer;">Calculate</button>
+
+                    <div id="result" style="margin-top: 15px;">
+                        <label style="display: block; margin-top: 10px; color: #fff;">Shortest Path to Target:</label>
+                        <table id="comparisonTable" style="width: 100%; max-width: 400px; border-collapse: collapse; margin-top: 10px; table-layout: fixed;">
+                            <thead>
+                                <tr style="background: #2a3439;">
+                                    <th style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; width: 25%;">Period</th>
+                                    <th style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; width: 25%;">Method</th>
+                                    <th style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; width: 25%;">Time to Target</th>
+                                    <th style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; width: 25%;">Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparisonTableBody">
+                                <tr><td colspan="4" style="text-align: center; padding: 5px; color: #ffffff;">Enter values and calculate to compare</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </details>
         `;
-        container.appendChild(div);
+
+        // Insert the calculator at the top of the target container
+        targetContainer.prepend(calcDiv);
+
+        // Add version number to bottom left corner
         const versionDiv = document.createElement('div');
         versionDiv.id = 'torn-bank-calc-version';
-        versionDiv.style.cssText = 'position:fixed;bottom:10px;left:10px;color:#fff;font-size:12px;font-family:Arial,sans-serif;z-index:1000;background:rgba(0,0,0,0.5);padding:2px 5px;border-radius:3px';
+        versionDiv.style.position = 'fixed';
+        versionDiv.style.bottom = '10px';
+        versionDiv.style.left = '10px';
+        versionDiv.style.color = '#ffffff';
+        versionDiv.style.fontSize = '12px';
+        versionDiv.style.fontFamily = 'Arial, sans-serif';
+        versionDiv.style.zIndex = '1000';
+        versionDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        versionDiv.style.padding = '2px 5px';
+        versionDiv.style.borderRadius = '3px';
         versionDiv.innerHTML = `Torn Bank Calc V${VERSION}`;
         document.body.appendChild(versionDiv);
+
+        console.log('Torn Bank Calc: Calculator UI added to the top of the page.');
+
+        // Show changelog notification if version is new
         showChangelogNotification();
-        document.getElementById('calcDetails').open = false;
-        document.getElementById('meritSelect').addEventListener('change', () => {
-            localStorage.setItem('tornBankCalcMerits', document.getElementById('meritSelect').value);
-            fetchDynamicBaseRates(parseInt(document.getElementById('meritSelect').value));
-        });
-        document.getElementById('stockBonus').addEventListener('change', () => localStorage.setItem('tornBankCalcStockBonus', document.getElementById('stockBonus').checked));
+
+        // Collapse by default
+        const details = document.getElementById('calcDetails');
+        if (details) {
+            details.open = false;
+        }
+
+        // Save preferences when changed
+        const meritSelect = document.getElementById('meritSelect');
+        const stockBonus = document.getElementById('stockBonus');
+        if (meritSelect) {
+            meritSelect.addEventListener('change', () => {
+                localStorage.setItem('tornBankCalcMerits', meritSelect.value);
+                fetchDynamicBaseRates(parseInt(meritSelect.value));
+            });
+        }
+        if (stockBonus) {
+            stockBonus.addEventListener('change', () => {
+                localStorage.setItem('tornBankCalcStockBonus', stockBonus.checked);
+            });
+        }
+
+        // Initial fetch with saved merits
         fetchDynamicBaseRates(parseInt(savedMerits));
     }
 
@@ -188,57 +272,144 @@
 
     function calculateProfitAndProjection() {
         try {
-            const principal = parseInput(document.getElementById('principal').value);
-            if (principal < 1000) throw new Error('Principal too low.');
-            const target = parseInput(document.getElementById('targetAmount').value);
-            if (target <= principal) throw new Error('Target must exceed principal.');
-            const merits = parseInt(document.getElementById('meritSelect').value);
-            const hasStock = document.getElementById('stockBonus').checked;
+            const principalInput = document.getElementById('principal').value.trim();
+            let principal = parseInput(principalInput);
+            if (principal < 1000) {
+                throw new Error('Principal too low. Enter a valid amount (e.g., 2000m).');
+            }
+
+            const targetInput = document.getElementById('targetAmount').value.trim();
+            let target = parseInput(targetInput);
+            if (target <= principal) {
+                throw new Error('Target amount must be greater than principal.');
+            }
+
+            const meritSelect = document.getElementById('meritSelect');
+            const merits = meritSelect ? parseInt(meritSelect.value) : 0;
+            const stockBonus = document.getElementById('stockBonus');
+            const hasStockBonus = stockBonus ? stockBonus.checked : false;
+
+            // Update base rates based on current merits
             fetchDynamicBaseRates(merits);
-            updateComparisonTable(principal, target, merits, hasStock);
+
+            // Update comparison table with shortest path
+            const comparisonTableBody = document.getElementById('comparisonTableBody');
+            if (comparisonTableBody) {
+                updateComparisonTable(principal, target, merits, hasStockBonus);
+            } else {
+                throw new Error('Comparison table body not found.');
+            }
+
+            console.log('Torn Bank Calc: Principal:', principal, 'Target:', target, 'Merits:', merits, 'Stock Bonus:', hasStockBonus);
         } catch (e) {
             console.error('Torn Bank Calc Error:', e);
-            document.getElementById('result').innerHTML = `Error: ${e.message || 'Check inputs'}`;
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.innerHTML = `Error: ${e.message || 'Check inputs'}`;
+            }
         }
     }
 
-    function updateComparisonTable(principal, target, merits, hasStock) {
-        const body = document.getElementById('comparisonTableBody');
-        let shortest = { days: Infinity };
+    function updateComparisonTable(principal, target, merits, hasStockBonus) {
+        const tableBody = document.getElementById('comparisonTableBody');
+        if (!tableBody) {
+            console.error('Comparison table body not found.');
+            return;
+        }
+
+        let shortestPath = null;
+        let shortestDays = Infinity;
+
+        // Evaluate each period for both reinvest and no-reinvest options
         investmentOptions.forEach(opt => {
-            const multiplier = 1 + (merits * 0.05);
-            let rate = opt.baseRate * multiplier * (hasStock ? 1.10 : 1) * (opt.period / 7);
-            const noReinvest = calculateTimeToTargetNoReinvest(principal, target, rate, opt.period);
-            if (noReinvest.days < shortest.days) shortest = { ...noReinvest, period: opt.label, method: 'No Reinvest' };
-            const reinvest = calculateTimeToTargetWithReinvest(principal, target, rate, opt.period);
-            if (reinvest.days < shortest.days) shortest = { ...reinvest, period: opt.label, method: 'Reinvest' };
+            const meritMultiplier = 1 + (merits * 0.05);
+            let effectiveRate = opt.baseRate * meritMultiplier;
+            if (hasStockBonus) {
+                effectiveRate *= 1.10;
+            }
+            const weeks = opt.period / 7;
+            const ratePerPeriod = effectiveRate * weeks;
+
+            // Calculate time to target without reinvestment
+            const noReinvest = calculateTimeToTargetNoReinvest(principal, target, ratePerPeriod, opt.period);
+            if (noReinvest.days < shortestDays) {
+                shortestDays = noReinvest.days;
+                shortestPath = {
+                    period: opt.label,
+                    method: 'No Reinvest',
+                    days: noReinvest.days,
+                    profit: noReinvest.profit
+                };
+            }
+
+            // Calculate time to target with reinvestment
+            const reinvest = calculateTimeToTargetWithReinvest(principal, target, ratePerPeriod, opt.period);
+            if (reinvest.days < shortestDays) {
+                shortestDays = reinvest.days;
+                shortestPath = {
+                    period: opt.label,
+                    method: 'Reinvest',
+                    days: reinvest.days,
+                    profit: reinvest.profit
+                };
+            }
         });
-        body.innerHTML = shortest.days !== Infinity ? `
-            <tr><td style="padding:5px;border:1px solid #3e4a50;color:#fff;text-align:center;width:25%">${shortest.period}</td>
-            <td style="padding:5px;border:1px solid #3e4a50;color:#fff;text-align:center;width:25%">${shortest.method}</td>
-            <td style="padding:5px;border:1px solid #3e4a50;color:#fff;text-align:center;width:25%">${formatDays(shortest.days)}</td>
-            <td style="padding:5px;border:1px solid #3e4a50;color:#fff;text-align:center;width:25%">${formatCurrency(shortest.profit)}</td></tr>` :
-            '<tr><td colspan="4" style="text-align:center;padding:5px;color:#fff">No valid path</td></tr>';
+
+        // Display the shortest path
+        let row = '';
+        if (shortestPath) {
+            row = `
+                <tr>
+                    <td style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; text-align: center; width: 25%;">${shortestPath.period}</td>
+                    <td style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; text-align: center; width: 25%;">${shortestPath.method}</td>
+                    <td style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; text-align: center; width: 25%;">${formatDays(shortestPath.days)}</td>
+                    <td style="padding: 5px; border: 1px solid #3e4a50; color: #ffffff; text-align: center; width: 25%;">${shortestPath.days === Infinity ? 'N/A' : formatCurrency(shortestPath.profit)}</td>
+                </tr>
+            `;
+        } else {
+            row = `<tr><td colspan="4" style="text-align: center; padding: 5px; color: #ffffff;">No valid path found</td></tr>`;
+        }
+
+        tableBody.innerHTML = row;
     }
 
     function init() {
+        console.log('Torn Bank Calc: Initializing script...');
         createCalculatorUI();
-        document.getElementById('calculateBtn').addEventListener('click', calculateProfitAndProjection);
+        const calculateBtn = document.getElementById('calculateBtn');
+        if (calculateBtn) {
+            calculateBtn.addEventListener('click', calculateProfitAndProjection);
+            console.log('Torn Bank Calc: Calculate button event listener added.');
+        } else {
+            console.error('Torn Bank Calc: Calculate button not found after UI creation.');
+        }
     }
 
     function waitForPageLoad() {
-        if (document.readyState === 'complete') init();
-        else window.addEventListener('load', init);
-        let attempts = 0;
-        const interval = setInterval(() => {
-            if (++attempts > 10) {
-                clearInterval(interval);
+        console.log('Torn Bank Calc: Waiting for page load...');
+        if (document.readyState === 'complete') {
+            console.log('Torn Bank Calc: Page already loaded, initializing...');
+            init();
+        } else {
+            window.addEventListener('load', () => {
+                console.log('Torn Bank Calc: Page load event triggered, initializing...');
                 init();
-            } else if (document.readyState === 'complete') {
-                clearInterval(interval);
-                init();
-            }
-        }, 1000);
+            });
+            let attempts = 0;
+            const maxAttempts = 10;
+            const interval = setInterval(() => {
+                attempts++;
+                console.log(`Torn Bank Calc: Attempt ${attempts} to initialize...`);
+                if (document.readyState === 'complete') {
+                    clearInterval(interval);
+                    init();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    console.error('Torn Bank Calc: Max attempts reached, forcing initialization...');
+                    init();
+                }
+            }, 1000);
+        }
     }
 
     waitForPageLoad();
