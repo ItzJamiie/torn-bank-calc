@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Bank Investment Calculator with Enhanced Features
 // @namespace    http://tampermonkey.net/
-// @version      3.5
+// @version      3.6
 // @description  Calculates Torn bank investment profit with merits, TCB stock, and displays the shortest path to target amount with profit and time.
 // @author       Jvmie
 // @match        https://www.torn.com/bank.php*
@@ -13,7 +13,7 @@
 (function() {
     'use strict';
 
-    const CURRENT_VERSION = '3.5'; // Must match @version
+    const CURRENT_VERSION = '3.6'; // Must match @version
     const SCRIPT_URL = 'https://raw.githubusercontent.com/ItzJamiie/torn-bank-calc/main/torn-bank-calc.user.js';
 
     // Function to check for updates (for compatibility with TornPDA)
@@ -41,11 +41,12 @@
     ];
 
     const MAX_INVESTMENT = 2000000000;
-    const VERSION = '3.5';
+    const VERSION = '3.6';
 
     const CHANGELOG = `
         <strong>Changelog:</strong>
         <ul>
+            <li><strong>Version 3.5:</strong> Optimized for TornPDA update system.</li>
             <li><strong>Version 3.3:</strong> Added a one-time update notification.</li>
             <li><strong>Version 3.2:</strong> Changed output to show only the shortest path.</li>
             <li><strong>Version 3.1:</strong> Removed 'Collapse' from button, added version in bottom left.</li>
