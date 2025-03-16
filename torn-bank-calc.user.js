@@ -46,14 +46,8 @@
     const CHANGELOG = `
         <strong>Changelog:</strong>
         <ul>
+            <li><strong>Version 3.6:</strong> Moved UI to the top of the webpage.</li>
             <li><strong>Version 3.5:</strong> Optimized for TornPDA update system.</li>
-            <li><strong>Version 3.3:</strong> Added a one-time update notification.</li>
-            <li><strong>Version 3.2:</strong> Changed output to show only the shortest path.</li>
-            <li><strong>Version 3.1:</strong> Removed 'Collapse' from button, added version in bottom left.</li>
-            <li><strong>Version 3.0:</strong> Made result table collapsible.</li>
-            <li><strong>Version 2.9:</strong> Changed 'Days to Target' to 'Time to Target'.</li>
-            <li><strong>Version 2.7:</strong> Added dynamic base rate fetching.</li>
-            <li><strong>Version 2.1:</strong> Introduced reinvestment and comparison table.</li>
         </ul>
     `;
 
@@ -127,11 +121,23 @@
     function createCalculatorUI() {
         console.log('Torn Bank Calc: Attempting to create UI...');
 
-        let targetContainer = document.querySelector('#mainContainer .content-wrapper') ||
-                             document.querySelector('.content-wrapper') ||
-                             document.querySelector('#bankBlock') ||
-                             document.querySelector('.content') ||
-                             document.body;
+        // Prioritize document.body to ensure top placement, with fallback containers
+        let targetContainer = document.body; // Start with body for absolute top placement
+        const fallbackContainers = [
+            document.querySelector('#mainContainer .content-wrapper'),
+            document.querySelector('.content-wrapper'),
+            document.querySelector('#bankBlock'),
+            document.querySelector('.content')
+        ];
+        // Use the first valid fallback if body insertion fails
+        if (!targetContainer || targetContainer.children.length === 0) {
+            for (let container of fallbackContainers) {
+                if (container) {
+                    targetContainer = container;
+                    break;
+                }
+            }
+        }
 
         if (!targetContainer) {
             console.error('Torn Bank Calc: Could not find target container. Aborting UI creation.');
@@ -200,7 +206,7 @@
             </details>
         `;
 
-        // Insert the calculator at the top of the target container
+        // Insert the calculator at the top of the target container (prioritizing body)
         targetContainer.prepend(calcDiv);
 
         // Add version number to bottom left corner
